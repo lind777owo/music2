@@ -72,19 +72,19 @@ body {
     transform: translateX(-50%);
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
-    padding: 20px; /* 15px에서 20px로 패딩 증가 */
-    border-radius: 10px; /* 8px에서 10px로 모서리 둥글기 증가 */
+    padding: 20px;
+    border-radius: 10px;
     max-width: 90%;
     display: flex;
     align-items: center;
-    gap: 20px; /* 15px에서 20px로 간격 증가 */
+    gap: 20px;
 }
 
 #albumArt {
-    width: 100px; /* 60px에서 100px로 증가 */
-    height: 100px; /* 60px에서 100px로 증가 */
-    border-radius: 6px; /* 4px에서 6px로 증가 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 그림자 추가 */
+    width: 100px;
+    height: 100px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .songInfo {
@@ -92,14 +92,39 @@ body {
 }
 
 .songTitle {
-    font-size: 24px; /* 18px에서 24px로 증가 */
+    font-size: 24px;
     font-weight: bold;
-    margin-bottom: 10px; /* 5px에서 10px로 증가 */
+    margin-bottom: 10px;
 }
 
 .artistName {
-    font-size: 18px; /* 14px에서 18px로 증가 */
+    font-size: 18px;
     opacity: 0.8;
+}
+
+/* 가사 표시 영역 스타일 추가 */
+#lyricsContainer {
+    position: absolute;
+    top: 160px; /* nowPlaying 아래 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    max-width: 90%;
+    width: calc(100px + 20px + 20px + 300px); /* 앨범아트 + 패딩 + 갭 + 텍스트공간 */
+    height: 400px; /* 노래 약 4개 정도의 높이 */
+    display: none;
+    overflow-y: auto; /* 스크롤 가능하도록 */
+}
+
+#lyrics {
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-line; /* 줄바꿈 유지 */
+    text-align: left;
+    padding: 5px;
 }
 </style>
 </head>
@@ -120,9 +145,14 @@ body {
     </div>
 </div>
 
+<!-- 가사 표시 영역 추가 -->
+<div id="lyricsContainer">
+    <div id="lyrics">가사를 불러오는 중...</div>
+</div>
+
 <script>
 // Spotify API 관련 설정
-const clientId = 'accbbaeda4194989ae00119335d7b130'; // Spotify Developer Dashboard에서 얻은 Client ID로 변경 필요
+const clientId = 'accbbaeda4194989ae00119335d7b130';
 const redirectUri = window.location.origin + window.location.pathname;
 const scopes = 'user-read-currently-playing';
 
@@ -135,6 +165,8 @@ const nowPlaying = document.getElementById('nowPlaying');
 const albumArt = document.getElementById('albumArt');
 const songTitle = document.getElementById('songTitle');
 const artistName = document.getElementById('artistName');
+const lyricsContainer = document.getElementById('lyricsContainer');
+const lyrics = document.getElementById('lyrics');
 
 // 캔버스 크기 설정
 canvas.width = window.innerWidth;
@@ -146,6 +178,7 @@ let dataArray;
 let isCapturing = false;
 let spotifyToken = null;
 let nowPlayingInterval = null;
+let currentTrackId = null;
 
 // 페이지 로드 시 URL 파라미터에서 토큰 확인
 window.onload = () => {
@@ -171,6 +204,40 @@ const loginToSpotify = () => {
     window.location.href = url;
 };
 
+// 가사 정보 가져오기 (예시 구현)
+const fetchLyrics = async (artist, title) => {
+    // 실제로는 Musixmatch나 다른 가사 API를 사용해야 함
+    // 이 예제에서는 더미 가사를 보여줌
+    
+    // 가사 컨테이너 표시
+    lyricsContainer.style.display = 'block';
+    
+    // 예시 가사 (실제 구현에서는 API에서 가져온 가사로 대체)
+    const dummyLyrics = 
+`${title} - ${artist}
+
+[Verse 1]
+여기에 노래 가사가 표시됩니다
+실제 구현에서는 가사 API를 연동하세요
+이 부분은 예시 가사입니다
+
+[Chorus]
+Spotify API는 직접 가사를 제공하지 않습니다
+Musixmatch 또는 다른 가사 제공 서비스를
+연동하여 실제 가사를 표시할 수 있습니다
+
+[Verse 2]
+지금 듣고 계신 노래의 가사를
+이 영역에 표시할 수 있습니다
+노래를 들으며 가사를 따라 읽어보세요
+
+[Outro]
+음악과 함께하는 즐거운 시간 되세요
+오디오 시각화와 가사를 함께 즐겨보세요`;
+
+    lyrics.textContent = dummyLyrics;
+};
+
 // 현재 재생 중인 트랙 정보 가져오기
 const checkNowPlaying = async () => {
     if (!spotifyToken) return;
@@ -185,6 +252,7 @@ const checkNowPlaying = async () => {
         if (response.status === 204) {
             // 재생 중인 트랙 없음
             nowPlaying.style.display = 'none';
+            lyricsContainer.style.display = 'none';
             return;
         }
         
@@ -195,6 +263,7 @@ const checkNowPlaying = async () => {
                 clearInterval(nowPlayingInterval);
                 loginButton.style.display = 'block';
                 nowPlaying.style.display = 'none';
+                lyricsContainer.style.display = 'none';
                 alert('Spotify 세션이 만료되었습니다. 다시 로그인해주세요.');
             }
             return;
@@ -207,8 +276,17 @@ const checkNowPlaying = async () => {
             artistName.textContent = data.item.artists.map(artist => artist.name).join(', ');
             albumArt.src = data.item.album.images[0].url;
             nowPlaying.style.display = 'flex';
+            
+            // 트랙이 변경되었을 때만 가사 정보 업데이트
+            if (currentTrackId !== data.item.id) {
+                currentTrackId = data.item.id;
+                const artistName = data.item.artists[0].name;
+                const trackName = data.item.name;
+                fetchLyrics(artistName, trackName);
+            }
         } else {
             nowPlaying.style.display = 'none';
+            lyricsContainer.style.display = 'none';
         }
     } catch (error) {
         console.error('Spotify API 호출 오류:', error);
@@ -254,6 +332,7 @@ const startCapture = async () => {
             isCapturing = false;
             startButton.style.display = 'block';
             instructions.style.display = 'block';
+            lyricsContainer.style.display = 'none';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         };
 
