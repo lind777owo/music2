@@ -3,12 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="cache-control" content="no-cache" />
-<meta http-equiv="expires" content="0" />
-<meta http-equiv="pragma" content="no-cache" />
 <title>시스템 오디오 스펙트럼 시각화 - Spotify 통합</title>
 <style>
-/* 기존 스타일은 그대로 유지 */
 body {
     margin: 0;
     padding: 0;
@@ -27,7 +23,7 @@ body {
 
 #startButton, #loginButton {
     position: absolute;
-    top: 40%;
+    top: 47.5%; /* 50%에서 40%로 변경하여 위로 올림 */
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 12px 24px;
@@ -41,7 +37,7 @@ body {
 }
 
 #loginButton {
-    background-color: #1DB954;
+    background-color: #1DB954; /* Spotify 색상 */
     margin-top: 70px;
 }
 
@@ -55,7 +51,7 @@ body {
 
 .instructions {
     position: absolute;
-    top: 65%;
+    top: 60%; /* 60%에서 65%로 변경하여 간격 확보 */
     left: 50%;
     transform: translate(-50%, -50%);
     margin-top: 20px;
@@ -64,7 +60,6 @@ body {
     line-height: 1.5;
 }
 
-/* 노래 정보 표시 부분 크기 수정 */
 #nowPlaying {
     position: absolute;
     top: 20px;
@@ -72,19 +67,18 @@ body {
     transform: translateX(-50%);
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
-    padding: 20px;
-    border-radius: 10px;
+    padding: 15px;
+    border-radius: 8px;
     max-width: 90%;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
 }
 
 #albumArt {
-    width: 100px;
-    height: 100px;
-    border-radius: 6px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
 }
 
 .songInfo {
@@ -92,42 +86,20 @@ body {
 }
 
 .songTitle {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .artistName {
-    font-size: 18px;
+    font-size: 14px;
     opacity: 0.8;
-}
-
-/* 가사 표시 영역 스타일 추가 */
-#lyricsContainer {
-    position: absolute;
-    top: 160px; /* nowPlaying 아래 위치 */
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 10px;
-    max-width: 90%;
-    width: calc(100px + 20px + 20px + 300px); /* 앨범아트 + 패딩 + 갭 + 텍스트공간 */
-    height: 400px; /* 노래 약 4개 정도의 높이 */
-    display: none;
-    overflow-y: auto; /* 스크롤 가능하도록 */
-}
-
-#lyrics {
-    font-size: 16px;
-    line-height: 1.6;
-    white-space: pre-line; /* 줄바꿈 유지 */
-    text-align: left;
-    padding: 5px;
 }
 </style>
 </head>
+<body>
+<!-- 나머지 HTML 코드는 동일 -->
+
 <body>
 <canvas id="canvas"></canvas>
 <button id="startButton">시스템 오디오 시각화 시작</button>
@@ -145,14 +117,9 @@ body {
     </div>
 </div>
 
-<!-- 가사 표시 영역 추가 -->
-<div id="lyricsContainer">
-    <div id="lyrics">가사를 불러오는 중...</div>
-</div>
-
 <script>
 // Spotify API 관련 설정
-const clientId = 'accbbaeda4194989ae00119335d7b130';
+const clientId = 'accbbaeda4194989ae00119335d7b130'; // Spotify Developer Dashboard에서 얻은 Client ID로 변경 필요
 const redirectUri = window.location.origin + window.location.pathname;
 const scopes = 'user-read-currently-playing';
 
@@ -165,8 +132,6 @@ const nowPlaying = document.getElementById('nowPlaying');
 const albumArt = document.getElementById('albumArt');
 const songTitle = document.getElementById('songTitle');
 const artistName = document.getElementById('artistName');
-const lyricsContainer = document.getElementById('lyricsContainer');
-const lyrics = document.getElementById('lyrics');
 
 // 캔버스 크기 설정
 canvas.width = window.innerWidth;
@@ -178,7 +143,6 @@ let dataArray;
 let isCapturing = false;
 let spotifyToken = null;
 let nowPlayingInterval = null;
-let currentTrackId = null;
 
 // 페이지 로드 시 URL 파라미터에서 토큰 확인
 window.onload = () => {
@@ -204,40 +168,6 @@ const loginToSpotify = () => {
     window.location.href = url;
 };
 
-// 가사 정보 가져오기 (예시 구현)
-const fetchLyrics = async (artist, title) => {
-    // 실제로는 Musixmatch나 다른 가사 API를 사용해야 함
-    // 이 예제에서는 더미 가사를 보여줌
-    
-    // 가사 컨테이너 표시
-    lyricsContainer.style.display = 'block';
-    
-    // 예시 가사 (실제 구현에서는 API에서 가져온 가사로 대체)
-    const dummyLyrics = 
-`${title} - ${artist}
-
-[Verse 1]
-여기에 노래 가사가 표시됩니다
-실제 구현에서는 가사 API를 연동하세요
-이 부분은 예시 가사입니다
-
-[Chorus]
-Spotify API는 직접 가사를 제공하지 않습니다
-Musixmatch 또는 다른 가사 제공 서비스를
-연동하여 실제 가사를 표시할 수 있습니다
-
-[Verse 2]
-지금 듣고 계신 노래의 가사를
-이 영역에 표시할 수 있습니다
-노래를 들으며 가사를 따라 읽어보세요
-
-[Outro]
-음악과 함께하는 즐거운 시간 되세요
-오디오 시각화와 가사를 함께 즐겨보세요`;
-
-    lyrics.textContent = dummyLyrics;
-};
-
 // 현재 재생 중인 트랙 정보 가져오기
 const checkNowPlaying = async () => {
     if (!spotifyToken) return;
@@ -252,7 +182,6 @@ const checkNowPlaying = async () => {
         if (response.status === 204) {
             // 재생 중인 트랙 없음
             nowPlaying.style.display = 'none';
-            lyricsContainer.style.display = 'none';
             return;
         }
         
@@ -263,7 +192,6 @@ const checkNowPlaying = async () => {
                 clearInterval(nowPlayingInterval);
                 loginButton.style.display = 'block';
                 nowPlaying.style.display = 'none';
-                lyricsContainer.style.display = 'none';
                 alert('Spotify 세션이 만료되었습니다. 다시 로그인해주세요.');
             }
             return;
@@ -276,17 +204,8 @@ const checkNowPlaying = async () => {
             artistName.textContent = data.item.artists.map(artist => artist.name).join(', ');
             albumArt.src = data.item.album.images[0].url;
             nowPlaying.style.display = 'flex';
-            
-            // 트랙이 변경되었을 때만 가사 정보 업데이트
-            if (currentTrackId !== data.item.id) {
-                currentTrackId = data.item.id;
-                const artistName = data.item.artists[0].name;
-                const trackName = data.item.name;
-                fetchLyrics(artistName, trackName);
-            }
         } else {
             nowPlaying.style.display = 'none';
-            lyricsContainer.style.display = 'none';
         }
     } catch (error) {
         console.error('Spotify API 호출 오류:', error);
@@ -332,7 +251,6 @@ const startCapture = async () => {
             isCapturing = false;
             startButton.style.display = 'block';
             instructions.style.display = 'block';
-            lyricsContainer.style.display = 'none';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         };
 
