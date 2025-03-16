@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시스템 오디오 스펙트럼 시각화 - Spotify 통합</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #313338;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+#canvas {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+#startButton, #loginButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 12px 24px;
+    font-size: 18px;
+    background-color: #5865F2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#loginButton {
+    background-color: #1DB954; /* Spotify 색상 */
+    margin-top: 70px;
+}
+
+#startButton:hover {
+    background-color: #4752C4;
+}
+
+#loginButton:hover {
+    background-color: #1AA34A;
+}
+
+.instructions {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 20px;
+    text-align: center;
+    max-width: 80%;
+    line-height: 1.5;
+}
+
+#nowPlaying {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 90%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#albumArt {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+}
+
+.songInfo {
+    text-align: left;
+}
+
+.songTitle {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.artistName {
+    font-size: 14px;
+    opacity: 0.8;
+}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<button id="startButton">시스템 오디오 시각화 시작</button>
+<button id="loginButton">Spotify 로그인</button>
+<div class="instructions" id="instructions">
+    화면 공유 창이 뜨면 "전체 화면" 또는 "창" 선택 후<br>
+    "시스템 오디오 공유" 옵션을 반드시 체크하세요.
+</div>
+
+<div id="nowPlaying" style="display: none;">
+    <img id="albumArt" src="" alt="Album Art">
+    <div class="songInfo">
+        <div class="songTitle" id="songTitle">노래 제목</div>
+        <div class="artistName" id="artistName">아티스트</div>
+    </div>
+</div>
+
+<script>
+// Spotify API 관련 설정
+const clientId = 'accbbaeda4194989ae00119335d7b130'; // Spotify Developer Dashboard에서 얻은 Client ID로 변경 필요
+const redirectUri = window.location.origin + window.location.pathname;
+const scopes = 'user-read-currently-playing';
+
+const startButton = document.getElementById('startButton');
+const loginButton = document.getElementById('loginButton');
+const canvas = document.getElementById('canvas');
+const instructions = document.getElementById('instructions');
+const ctx = canvas.getContext('2d');
+const nowPlaying = document.getElementById('nowPlaying');
+const albumArt = document.getElementById('albumArt');
+const songTitle = document.getElementById('songTitle');
+const artistName = document.getElementById('artistName');
+
+// 캔버스 크기 설정
+canvas.width = window.innerWidth;
+canvas.height = 250;
+
+let audioContext;
+let analyser;
+let dataArray;
+let isCapturing = false;
+let spotifyToken = null;
+let nowPlayingInterval = null;
+
+// 페이지 로드 시 URL 파라미터에서 토큰 확인
+window.onload = () => {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    if (params.has('access_token')) {
+        spotifyToken = params.get('access_token');
+        loginButton.style.display = 'none';
+        checkNowPlaying();
+        // 토큰이 있으면 주기적으로 현재 재생 중인 트랙 정보 가져오기
+        nowPlayingInterval = setInterval(checkNowPlaying, 5000);
+    }
+    
+    // URL에서 토큰 부분 제거
+    if (window.location.hash) {
+        history.pushState("", document.title, window.location.pathname + window.location.search);
+    }
+};
+
+// Spotify 로그인
+const loginToSpotify = () => {
+    const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=token&show_dialog=true`;
+    window.location.href = url;
+};
+
+// 현재 재생 중인 트랙 정보 가져오기
+const checkNowPlaying = async () => {
+    if (!spotifyToken) return;
+    
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+            headers: {
+                'Authorization': `Bearer ${spotifyToken}`
+            }
+        });
+        
+        if (response.status === 204) {
+            // 재생 중인 트랙 없음
+            nowPlaying.style.display = 'none';
+            return;
+        }
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                // 토큰 만료됨
+                spotifyToken = null;
+                clearInterval(nowPlayingInterval);
+                loginButton.style.display = 'block';
+                nowPlaying.style.display = 'none';
+                alert('Spotify 세션이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.item) {
+            // 노래 정보 표시
+            songTitle.textContent = data.item.name;
+            artistName.textContent = data.item.artists.map(artist => artist.name).join(', ');
+            albumArt.src = data.item.album.images[0].url;
+            nowPlaying.style.display = 'flex';
+        } else {
+            nowPlaying.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Spotify API 호출 오류:', error);
+    }
+};
+
+// 시스템 오디오 캡처 시작
+const startCapture = async () => {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true
+        });
+
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length === 0) {
+            alert('시스템 오디오 공유가 선택되지 않았습니다. 다시 시도해주세요.');
+            return;
+        }
+
+        stream.getVideoTracks().forEach(track => track.stop());
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+
+        const source = audioContext.createMediaStreamSource(new MediaStream([audioTracks[0]]));
+        source.connect(analyser);
+
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+
+        startButton.style.display = 'none';
+        instructions.style.display = 'none';
+        if (!spotifyToken) {
+            loginButton.style.display = 'block';
+        }
+
+        isCapturing = true;
+        visualize();
+
+        audioTracks[0].onended = () => {
+            isCapturing = false;
+            startButton.style.display = 'block';
+            instructions.style.display = 'block';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        };
+
+    } catch (err) {
+        console.error('오디오 캡처 오류:', err);
+        alert('화면 공유가 취소되었거나 오류가 발생했습니다.');
+    }
+};
+
+// 오디오 시각화 함수
+function visualize() {
+    if (!isCapturing) return;
+
+    requestAnimationFrame(visualize);
+
+    analyser.getByteFrequencyData(dataArray);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const barWidth = canvas.width / dataArray.length;
+    let x = 0;
+
+    for (let i = 0; i < dataArray.length; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height;
+
+        const hue = (i / dataArray.length) * 360;
+        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+        x += barWidth;
+    }
+}
+
+// 이벤트 리스너
+startButton.addEventListener('click', startCapture);
+loginButton.addEventListener('click', loginToSpotify);
+
+// 창 크기 조정 처리
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+});
+</script>
+</body>
+</html>
