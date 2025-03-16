@@ -1,0 +1,15 @@
+#lyricsContainer {
+    position: absolute;
+    top: 160px; /* nowPlaying 아래 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    max-width: 90%;
+    width: calc(100px + 20px + 20px + 300px);
+    height: 400px; /* 노래 약 4개 정도의 높이 */
+    display: none;
+    overflow-y: auto;
+}
