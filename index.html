@@ -67,19 +67,17 @@ body {
     transform: translateX(-50%);
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
-    padding: 17.5px;
-    border-radius: 9px;
+    padding: 15px; /* 15px에서 20px로 패딩 증가 */
+    border-radius: 8px; /* 8px에서 10px로 모서리 둥글기 증가 */
     max-width: 90%;
     display: flex;
     align-items: center;
-    gap: 17.5px;
+    gap: 15px; /* 15px에서 20px로 간격 증가 */
 }
 
 #albumArt {
-    width: 80px;
-    height: 80px;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 그림자 추가 */
+    width: 60px; /* 60px에서 100px로 증가 */
+    border-radius: 4px; /* 4px에서 6px로 증가 */
 }
 
 .songInfo {
@@ -87,20 +85,17 @@ body {
 }
 
 .songTitle {
-    font-size: 21px;
+    font-size: 18px; /* 18px에서 24px로 증가 */
     font-weight: bold;
-    margin-bottom: 7.5px;
+    margin-bottom: 5px; /* 5px에서 10px로 증가 */
 }
 
 .artistName {
-    font-size: 14px;
+    font-size: 14px; /* 14px에서 18px로 증가 */
     opacity: 0.8;
 }
 </style>
 </head>
-<body>
-<!-- 나머지 HTML 코드는 동일 -->
-
 <body>
 <canvas id="canvas"></canvas>
 <button id="startButton">시스템 오디오 시각화 시작</button>
