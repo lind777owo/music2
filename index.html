@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="pragma" content="no-cache" />
 <title>시스템 오디오 스펙트럼 시각화 - Spotify 통합</title>
 <style>
+/* 기존 스타일은 그대로 유지 */
 body {
     margin: 0;
     padding: 0;
@@ -23,7 +27,7 @@ body {
 
 #startButton, #loginButton {
     position: absolute;
-    top: 47.5%; /* 50%에서 40%로 변경하여 위로 올림 */
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 12px 24px;
@@ -37,7 +41,7 @@ body {
 }
 
 #loginButton {
-    background-color: #1DB954; /* Spotify 색상 */
+    background-color: #1DB954;
     margin-top: 70px;
 }
 
@@ -51,7 +55,7 @@ body {
 
 .instructions {
     position: absolute;
-    top: 60%; /* 60%에서 65%로 변경하여 간격 확보 */
+    top: 65%;
     left: 50%;
     transform: translate(-50%, -50%);
     margin-top: 20px;
@@ -60,6 +64,7 @@ body {
     line-height: 1.5;
 }
 
+/* 노래 정보 표시 부분 크기 수정 */
 #nowPlaying {
     position: absolute;
     top: 20px;
@@ -67,18 +72,19 @@ body {
     transform: translateX(-50%);
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 8px;
+    padding: 20px; /* 15px에서 20px로 패딩 증가 */
+    border-radius: 10px; /* 8px에서 10px로 모서리 둥글기 증가 */
     max-width: 90%;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px; /* 15px에서 20px로 간격 증가 */
 }
 
 #albumArt {
-    width: 60px;
-    height: 60px;
-    border-radius: 4px;
+    width: 100px; /* 60px에서 100px로 증가 */
+    height: 100px; /* 60px에서 100px로 증가 */
+    border-radius: 6px; /* 4px에서 6px로 증가 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 그림자 추가 */
 }
 
 .songInfo {
@@ -86,20 +92,17 @@ body {
 }
 
 .songTitle {
-    font-size: 18px;
+    font-size: 24px; /* 18px에서 24px로 증가 */
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 10px; /* 5px에서 10px로 증가 */
 }
 
 .artistName {
-    font-size: 14px;
+    font-size: 18px; /* 14px에서 18px로 증가 */
     opacity: 0.8;
 }
 </style>
 </head>
-<body>
-<!-- 나머지 HTML 코드는 동일 -->
-
 <body>
 <canvas id="canvas"></canvas>
 <button id="startButton">시스템 오디오 시각화 시작</button>
