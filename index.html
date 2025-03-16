@@ -67,18 +67,19 @@ body {
     transform: translateX(-50%);
     text-align: center;
     background-color: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 8px;
+    padding: 17.5px;
+    border-radius: 9px;
     max-width: 90%;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 17.5px;
 }
 
 #albumArt {
-    width: 60px;
-    height: 60px;
-    border-radius: 4px;
+    width: 80px;
+    height: 80px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 그림자 추가 */
 }
 
 .songInfo {
@@ -86,9 +87,9 @@ body {
 }
 
 .songTitle {
-    font-size: 18px;
+    font-size: 21px;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 7.5px;
 }
 
 .artistName {
@@ -135,7 +136,7 @@ const artistName = document.getElementById('artistName');
 
 // 캔버스 크기 설정
 canvas.width = window.innerWidth;
-canvas.height = 400;
+canvas.height = 250;
 
 let audioContext;
 let analyser;
