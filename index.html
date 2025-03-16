@@ -23,7 +23,7 @@ body {
 
 #startButton, #loginButton {
     position: absolute;
-    top: 50%;
+    top: 45%; /* 50%에서 40%로 변경하여 위로 올림 */
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 12px 24px;
@@ -51,7 +51,7 @@ body {
 
 .instructions {
     position: absolute;
-    top: 60%;
+    top: 60%; /* 60%에서 65%로 변경하여 간격 확보 */
     left: 50%;
     transform: translate(-50%, -50%);
     margin-top: 20px;
@@ -97,6 +97,9 @@ body {
 }
 </style>
 </head>
+<body>
+<!-- 나머지 HTML 코드는 동일 -->
+
 <body>
 <canvas id="canvas"></canvas>
 <button id="startButton">시스템 오디오 시각화 시작</button>
